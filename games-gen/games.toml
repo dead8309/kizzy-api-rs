@@ -1,0 +1,19 @@
+[nintendo_3ds]
+url = "https://raw.githubusercontent.com/ninstar/Rich-Presence-U-DB/main/titles/ctr.csv"
+clients = ["864487170759589980"]
+name = "nintendo-3ds"
+
+[nintendo_switch]
+url = "https://raw.githubusercontent.com/ninstar/Rich-Presence-U-DB/main/titles/hac.csv"
+clients = ["864486650271629312", "1030141196686856262"]
+name = "nintendo"
+
+[wii_u]
+url = "https://raw.githubusercontent.com/ninstar/Rich-Presence-U-DB/main/titles/wup.csv"
+clients = ["864486365218603008"]
+name = "wii"
+
+[xbox]
+url = "https://raw.githubusercontent.com/MrCoolAndroid/Xbox-Rich-Presence-Discord/main/Games%20List.json"
+name = "xbox"
+# clients is optional and can be omitted if not needed
