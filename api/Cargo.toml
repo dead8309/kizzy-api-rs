@@ -10,3 +10,14 @@ reqwest = { workspace = true }
 tokio = { workspace = true }
 serde ={ workspace = true }
 serde_json = { workspace = true }
+actix-web = "4.5.1"
+dotenv = "0.15.0"
+env_logger = "0.11.3"
+slicestring = "0.3.3"
+actix-multipart = "0.6.1"
+log = "0.4.21"
+
+[dependencies.serenity]
+default-features = false
+features = ["http", "model", "native_tls_backend"]
+version = "0.12"
