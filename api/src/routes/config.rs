@@ -5,7 +5,7 @@ use actix_multipart::{
 };
 use actix_web::{web, Error, HttpRequest};
 
-use super::handlers::{get_image, upload_image};
+use super::handlers::{get_image, upload_image, games, user, contributors};
 
 fn handle_multipart_error(err: MultipartError, _: &HttpRequest) -> Error {
     log::info!("Multipart error: {}", err);
@@ -23,5 +23,8 @@ pub fn config(config: &mut web::ServiceConfig) {
         .app_data(multipart_config)
         .app_data(tmp_config)
         .service(get_image)
-        .service(upload_image);
+        .service(upload_image)
+        .service(games)
+        .service(user)
+        .service(contributors);
 }

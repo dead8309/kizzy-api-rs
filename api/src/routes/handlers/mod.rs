@@ -1,11 +1,18 @@
+use std::{
+    fs::File,
+    io::{BufReader, Read},
+};
+
 use actix_multipart::form::{tempfile::TempFile, MultipartForm};
 use actix_web::{get, post, web, Responder};
+use log::error;
 use serde::Deserialize;
 use slicestring::Slice;
 
 use crate::utils::{
     api_response::{self, MediaResponse},
     constants::{DEFAULT_RESPONSE, UPLOAD_DIR},
+    discord, github,
     webhook::{send_image_embed, upload_image_file},
 };
 
@@ -27,17 +34,18 @@ async fn get_image(req: web::Query<ImageQuery>) -> impl Responder {
                         asset.slice(asset.find("external").unwrap_or(0)..)
                     };
                     data = format!("mp:{}", data);
-                    api_response::ApiResponse::new(200, MediaResponse::new(data))
+                    api_response::ApiResponse::from_json(200, MediaResponse::new(data))
                 }
-                _ => api_response::ApiResponse::new(
+                _ => api_response::ApiResponse::from_json(
                     200,
                     MediaResponse::new(DEFAULT_RESPONSE.to_string()),
                 ),
             }
         }
-        None => {
-            api_response::ApiResponse::new(200, MediaResponse::new(DEFAULT_RESPONSE.to_string()))
-        }
+        None => api_response::ApiResponse::from_json(
+            200,
+            MediaResponse::new(DEFAULT_RESPONSE.to_string()),
+        ),
     }
 }
 
@@ -48,22 +56,6 @@ struct ImageUpload {
 
 #[post("/upload")]
 async fn upload_image(MultipartForm(form): MultipartForm<ImageUpload>) -> impl Responder {
-    /* match form.temp.size {
-        0 => {
-            return api_response::ApiResponse::new(
-                400,
-                MediaResponse::new(DEFAULT_RESPONSE.to_string()),
-            )
-        }
-        length if length > MAX_FILE_SIZE => {
-            return api_response::ApiResponse::new(
-                400,
-                MediaResponse::new(DEFAULT_RESPONSE.to_string()),
-            );
-        }
-        _ => {}
-    };
-    */
     let path = format!("{}/{}", UPLOAD_DIR, form.temp.file_name.unwrap());
     let _ = form.temp.file.persist(path.clone());
     match upload_image_file(path).await {
@@ -72,14 +64,52 @@ async fn upload_image(MultipartForm(form): MultipartForm<ImageUpload>) -> impl R
                 "mp:{}",
                 asset.slice(asset.find("attachments").unwrap_or(0)..)
             );
-            return api_response::ApiResponse::new(200, MediaResponse::new(data));
+            return api_response::ApiResponse::from_json(200, MediaResponse::new(data));
         }
         Err(err) => {
             log::error!("Error occurred while uploading file, {}", err);
-            return api_response::ApiResponse::new(
+            return api_response::ApiResponse::from_json(
                 200,
                 MediaResponse::new(DEFAULT_RESPONSE.to_string()),
             );
+        }
+    }
+}
+
+#[get("/games")]
+async fn games() -> impl Responder {
+    let reader = File::open("../gen/games.json");
+    match reader {
+        Ok(file) => {
+            let mut contents = String::new();
+            let mut reader = BufReader::new(file);
+            let _ = reader.read_to_string(&mut contents);
+            api_response::ApiResponse::new(200, contents)
+        }
+        Err(err) => {
+            error!("File could not be opened, {}", err);
+            api_response::ApiResponse::new(500, "Internal Server Error".to_string())
+        }
+    }
+}
+
+#[get("/user/{userid}")]
+async fn user(path: web::Path<u64>) -> impl Responder {
+    let user_id = path.into_inner();
+    match discord::get_user_by_id(user_id).await {
+        Ok(user) => api_response::ApiResponse::from_json(200, user),
+        Err(err) => api_response::ApiResponse::new(500, err.to_string()),
+    }
+}
+
+#[get("/contributors")]
+async fn contributors() -> impl Responder {
+    let response = github::get_gitub_contributors().await;
+    match response {
+        Ok(contributors) => api_response::ApiResponse::from_json(200, contributors),
+        Err(err) => {
+            error!("Error occurred while fetching contributors, {}", err);
+            api_response::ApiResponse::new(500, "Internal Server Error".to_string())
         }
     }
 }
