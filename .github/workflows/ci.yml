@@ -1,0 +1,45 @@
+name: ci
+
+on:
+  schedule:
+    - cron: '0 0 */2 * *'  # run every 2 days at 12am
+  workflow_dispatch:
+
+jobs:
+  generate-and-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Run games-gen
+        run: cd games-gen && cargo run
+
+      - name: Check for Changes
+        id: check_changes
+        run: |
+          git diff --exit-code --quiet || echo "Changes detected" && echo "::set-output name=changes::true"
+
+      - name: Commit and Push Changes
+        if: steps.check_changes.outputs.changes == 'true'
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add .
+          git commit -m "CI: update games.json"
+          git push origin generated-files
+
+      - name: Create Pull Request
+        if: steps.check_changes.outputs.changes == 'true'
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: generated-files
+          title: "Automated Update: Games"
+          body: "This PR updates the generated games.json"
+          labels: "auto-generated"
+
