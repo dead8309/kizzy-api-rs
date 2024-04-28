@@ -24,22 +24,13 @@ jobs:
         run: |
           git diff --exit-code --quiet || echo "Changes detected" && echo "::set-output name=changes::true"
 
-      - name: Commit and Push Changes
-        if: steps.check_changes.outputs.changes == 'true'
-        run: |
-          git config --local user.email "actions@github.com"
-          git config --local user.name "GitHub Actions"
-          git add .
-          git commit -m "CI: update games.json"
-          git push origin generated-files
-
       - name: Create Pull Request
         if: steps.check_changes.outputs.changes == 'true'
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           branch: generated-files
           title: "Automated Update: Games"
           body: "This PR updates the generated games.json"
           labels: "auto-generated"
+          delete-branch: true
 
