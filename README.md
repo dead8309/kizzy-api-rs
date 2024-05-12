@@ -1,6 +1,6 @@
 # Kizzy-Api
 
-Rewrite of Kizzy API in rust. Currently in development 🚧
+Rewrite of [Kizzy](https://github.com/dead8309/kizzy) API in rust. Currently in development 🚧
 
 ## TODO
 - [x] Add generate games package
