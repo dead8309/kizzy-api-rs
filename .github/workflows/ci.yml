@@ -2,7 +2,7 @@ name: ci
 
 on:
   schedule:
-    - cron: '0 0 */2 * *'  # run every 2 days at 12am
+    - cron: '0 0 */14 * *'  # run every 14 days at 12am
   workflow_dispatch:
 
 jobs:
